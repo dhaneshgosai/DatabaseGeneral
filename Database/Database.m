@@ -235,4 +235,57 @@ NSString * const DataBaseName  = @"chattfly.db";
     }
 }
 
+
+-(void)ste{
+    NSMutableDictionary *aMutDictBody = [[NSMutableDictionary alloc]init];
+    [aMutDictBody setValue:[arrayGroup lastObject] forKey:@"room_id"];
+    
+    NSMutableArray *aMutArrParameter = [[NSMutableArray alloc]init];
+    [aMutArrParameter addObject:aMutDictBody];
+    
+    //Method
+    NSMutableDictionary *aMutDictMain=[[NSMutableDictionary alloc]init];
+    [aMutDictMain setValue:userListByRoom forKey:@"method"];
+    [aMutDictMain setValue:aMutArrParameter forKey:@"body"];
+    
+    NSError * error = nil;
+    NSData * jsonData = [NSJSONSerialization dataWithJSONObject:aMutDictMain options:NSJSONWritingPrettyPrinted error:&error];
+    
+    NSString *aStrJsonString = [[NSString alloc] initWithData:jsonData encoding: NSUTF8StringEncoding];
+    
+    NSString *aStrRequest = [NSString stringWithFormat:@"post_data_string=%@",aStrJsonString];
+    
+    NSLog(@"\n Url ===%@ \n Request ===%@",[NSURL URLWithString:webUrl],aStrRequest);
+    
+    aStrJsonString=[aStrRequest stringByReplacingOccurrencesOfString:@"&" withString:@"%26"];
+    const char *utfYourString = [aStrRequest UTF8String];
+    NSMutableData *requestData = [NSMutableData dataWithBytes:utfYourString length:strlen(utfYourString)];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:webUrl]];
+    [request setHTTPMethod: @"POST"];
+    [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+    
+    [request setHTTPBody: requestData];
+    
+    NSURLResponse *response;
+    
+    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+    NSDictionary *aDictTemp = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:&error];
+    if(aDictTemp){
+        //        NSLog(@"User ARR%@",[[aDictTemp objectForKey:@"data"] objectForKey:@"result"]);
+        [appDelegate UpdateMembersDetails:[[aDictTemp objectForKey:@"data"] objectForKey:@"result"] andGroupJid:aStrGroupName];
+    }
+    
+    //    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+    //        if (!connectionError) {
+    //            NSError *error;
+    //            NSDictionary *aDictTemp = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:&error];
+    //            if(aDictTemp){
+    //                NSLog(@"User ARR%@",[[aDictTemp objectForKey:@"data"] objectForKey:@"result"]);
+    //                [appDelegate UpdateMembersDetails:[[aDictTemp objectForKey:@"data"] objectForKey:@"result"] andGroupJid:aStrGroupName];
+    //            }
+    //        }
+    //    }];
+
+}
+
 @end
